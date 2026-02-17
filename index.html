@@ -1,27 +1,729 @@
-<html>
-
+<!doctype html>
+<html lang="no">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width initial-scale=1.0 user-scalable=yes">
-    <title>Sudoku</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#FA9810" />
+  <title>Varme Hus – AI-drevet energivurdering av boligen din</title>
 
-    <link rel="stylesheet" href="sudoku.css">
-    <script src="sudoku.js"></script>
+  <!-- SEO -->
+  <meta name="description" content="Varme Hus er en studentbedrift som utvikler en AI-tjeneste for energivurdering av boliger. Få konkrete forslag som kan redusere energiforbruk og kostnader." />
+  <meta name="robots" content="index,follow" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Varme Hus – AI-drevet energivurdering" />
+  <meta property="og:description" content="Få konkrete forslag som kan redusere energiforbruk og kostnader. Lanseres snart." />
+  <meta property="og:type" content="website" />
+  <!-- Sett gjerne til en faktisk URL når domenet er aktivt -->
+  <meta property="og:url" content="" />
+  <!-- Valgfritt: legg inn et og-bilde senere -->
+  <meta property="og:image" content="" />
+
+  <style>
+    #hvordan { scroll-margin-top: 90px; }
+    #om      { scroll-margin-top: 120px; }
+    #kontakt { scroll-margin-top: 160px; }
+    :root{
+      --brand:#FA9810;
+      --brand2:#FFB347;
+      --bg:#fff7ef;
+      --card:rgba(255,255,255,.82);
+      --text:#1a1208;
+      --muted:#6b5a4a;
+      --line:#f0e2d6;
+      --shadow:0 18px 50px rgba(20,12,6,.12);
+      --radius:22px;
+      --max:1120px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Liberation Sans", sans-serif;
+      color:var(--text);
+      background: var(--bg);
+      overflow-x:hidden;
+    }
+
+    /* Soft background like a premium landing page */
+    .bg{
+      position:fixed; inset:-40px;
+      z-index:-3;
+      background:
+        radial-gradient(900px 560px at 18% 12%, rgba(250,152,16,.18), transparent 58%),
+        radial-gradient(900px 560px at 88% 6%, rgba(255,179,71,.18), transparent 55%),
+        radial-gradient(900px 560px at 60% 92%, rgba(250,152,16,.10), transparent 60%),
+        linear-gradient(180deg, rgba(255,247,239,1) 0%, rgba(255,255,255,1) 100%);
+    }
+    .noise{
+      position:fixed; inset:0; z-index:-2;
+      opacity:.06;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+      pointer-events:none;
+    }
+
+    a{ color:inherit; }
+
+    /* Topbar */
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      background:rgba(255,255,255,.72);
+      backdrop-filter: blur(12px);
+      border-bottom:1px solid var(--line);
+    }
+    .topbar .inner{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:14px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      text-decoration:none;
+      min-width:0;
+    }
+    .brandmark{
+      width:40px; height:40px;
+      border-radius:14px;
+      background: rgba(250,152,16,.14);
+      border:1px solid rgba(250,152,16,.30);
+      display:grid;
+      place-items:center;
+      flex:0 0 auto;
+    }
+    .brandmark svg{ width:20px; height:20px; }
+    .brandtext{
+      display:flex;
+      flex-direction:column;
+      line-height:1.1;
+      min-width:0;
+    }
+    .brandtext .name{
+      font-weight:900;
+      letter-spacing:.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .brandtext .tag{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .nav{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .nav a{
+      text-decoration:none;
+      font-weight:800;
+      font-size:14px;
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid transparent;
+    }
+    .nav a:hover{
+      border-color:rgba(250,152,16,.28);
+      background:rgba(250,152,16,.06);
+      color:var(--text);
+    }
+
+    /* Layout */
+    .wrap{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:36px 18px 80px;
+    }
+
+    .hero{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:22px;
+      align-items:stretch;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .heroMain{
+      padding:26px 26px 22px;
+      position:relative;
+      overflow:hidden;
+    }
+    .heroMain:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(520px 320px at 25% 10%, rgba(250,152,16,.18), transparent 60%),
+        radial-gradient(520px 320px at 90% 0%, rgba(255,179,71,.12), transparent 55%);
+      pointer-events:none;
+      z-index:0;
+    }
+    .heroMain > *{ position:relative; z-index:1; }
+
+    .logoRow{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .logo{
+      width:78px;
+      height:auto;
+      border-radius:18px;
+      background:#fff;
+      border:1px solid rgba(0,0,0,.04);
+      box-shadow: 0 10px 30px rgba(20,12,6,.08);
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(250,152,16,.28);
+      background: rgba(250,152,16,.08);
+      font-weight:900;
+      font-size:13px;
+      color:var(--text);
+    }
+    .dot{
+      width:8px;height:8px;border-radius:999px;
+      background:var(--brand);
+      box-shadow:0 0 0 6px rgba(250,152,16,.16);
+    }
+
+    h1{
+      margin:10px 0 10px;
+      font-size: clamp(26px, 3.2vw, 44px);
+      letter-spacing:-.4px;
+      line-height:1.05;
+    }
+    .lead{
+      margin:0 0 18px;
+      color:var(--muted);
+      font-size:16.5px;
+      line-height:1.55;
+      max-width: 62ch;
+    }
+
+    .ctaRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:6px;
+    }
+    .btn{
+      appearance:none;
+      border:1px solid var(--line);
+      background:#fff;
+      color:var(--text);
+      border-radius:14px;
+      padding:12px 14px;
+      font-weight:950;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      transition: transform .08s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .btn:hover{
+      border-color: rgba(250,152,16,.40);
+      box-shadow: 0 10px 26px rgba(20,12,6,.10);
+      transform: translateY(-1px);
+    }
+    .btnPrimary{
+      background: linear-gradient(180deg, rgba(250,152,16,1), rgba(245,135,0,1));
+      border-color: rgba(250,152,16,.35);
+      color:#14110a;
+    }
+    .btnPrimary:hover{
+      box-shadow: 0 14px 30px rgba(250,152,16,.22);
+    }
+    .smallNote{
+      font-size:12.5px;
+      color:var(--muted);
+      margin-top:10px;
+    }
+
+    /* Right-side hero card */
+    .heroSide{
+      padding:22px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+    .kpis{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .kpi{
+      background: rgba(255,255,255,.72);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px 14px 12px;
+    }
+    .kpi .v{
+      font-weight:1000;
+      font-size:18px;
+      letter-spacing:-.2px;
+    }
+    .kpi .l{
+      margin-top:4px;
+      font-size:12.5px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+
+    .form{
+      margin-top:2px;
+      background: rgba(255,255,255,.72);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+    }
+    .form label{
+      display:block;
+      font-weight:950;
+      margin-bottom:8px;
+    }
+    .fieldRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    input[type="email"]{
+      flex:1;
+      min-width: 220px;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:#fff;
+      font-size:15px;
+      outline:none;
+    }
+    input[type="email"]:focus{
+      border-color: rgba(250,152,16,.45);
+      box-shadow: 0 0 0 4px rgba(250,152,16,.12);
+    }
+    .form .hint{
+      margin-top:10px;
+      font-size:12.5px;
+      color:var(--muted);
+      line-height:1.45;
+    }
+
+    /* Sections */
+    .section{
+      margin-top:22px;
+      padding:22px 22px;
+    }
+    .section h2{
+      margin:0 0 8px;
+      font-size:18px;
+      letter-spacing:-.2px;
+    }
+    .grid3{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+    }
+    .feature{
+      background: rgba(255,255,255,.70);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+    }
+    .feature .icon{
+      width:40px;height:40px;border-radius:14px;
+      display:grid;place-items:center;
+      background: rgba(250,152,16,.10);
+      border:1px solid rgba(250,152,16,.25);
+      margin-bottom:10px;
+      font-size:18px;
+    }
+    .feature .t{
+      font-weight:950;
+      margin:0 0 6px;
+    }
+    .feature .d{
+      margin:0;
+      color:var(--muted);
+      font-size:13.5px;
+      line-height:1.5;
+    }
+
+    .twoCol{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+    .panel{
+      background: rgba(255,255,255,.70);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+    }
+    .panel p{
+      margin:8px 0 0;
+      color:var(--muted);
+      line-height:1.55;
+      font-size:13.5px;
+    }
+
+    /* Footer */
+    footer{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:22px 18px 34px;
+      color:var(--muted);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+    .footLinks{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .chip{
+      text-decoration:none;
+      font-weight:900;
+      font-size:13px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.70);
+    }
+    .chip:hover{
+      border-color: rgba(250,152,16,.35);
+      background: rgba(250,152,16,.06);
+      color: var(--text);
+    }
+
+    /* Tiny animation (subtle) */
+    @media (prefers-reduced-motion: no-preference){
+      .heroMain{ animation: floatIn .55s ease both; }
+      .heroSide{ animation: floatIn .65s ease both; }
+      @keyframes floatIn{
+        from{ transform: translateY(10px); opacity:0; }
+        to{ transform: translateY(0); opacity:1; }
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 940px){
+      .hero{ grid-template-columns: 1fr; }
+      .kpis{ grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 720px){
+      .grid3{ grid-template-columns: 1fr; }
+      .twoCol{ grid-template-columns: 1fr; }
+      .kpis{ grid-template-columns: 1fr; }
+      .nav a{ padding:8px 10px; }
+    }
+  </style>
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"Organization",
+    "name":"Varme Hus",
+    "description":"Studentbedrift som utvikler en AI-tjeneste for energivurdering av boliger.",
+    "url":"http://www.varmehus.no",
+    "email":"jon@varmehus.no"
+  }
+  </script>
 </head>
 
 <body>
-    <h1>Sudoku</h1>
-    <hr>
-    <h2 id="errors"></h2>
+  <div class="bg"></div>
+  <div class="noise"></div>
 
-    <!--9x9 board-->
-    <div id="board"></div>
-    <br>
-    <div id="digits">
+  <header class="topbar">
+    <div class="inner">
+      <a class="brand" href="#" aria-label="Varme Hus">
+        <div class="brandmark" aria-hidden="true">
+          <!-- simple house icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 10.5 12 3l9 7.5"></path>
+            <path d="M5 10v10h14V10"></path>
+            <path d="M10 20v-6h4v6"></path>
+          </svg>
+        </div>
+        <div class="brandtext">
+          <div class="name">Varme Hus</div>
+          <div class="tag">AI-drevet energivurdering • Lanseres snart</div>
+        </div>
+      </a>
 
+      <nav class="nav" aria-label="Meny">
+        <a href="#hvordan">Hvordan det fungerer</a>
+        <a href="#om">Om oss</a>
+        <a href="#kontakt">Kontakt</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="card heroMain">
+        <div class="logoRow">
+          <!-- Bytt path om nødvendig -->
+          <img class="logo" src="assets/varme_hus_logo_whitebg.png" alt="Varme Hus logo" />
+          <span class="pill"><span class="dot" aria-hidden="true"></span> Under utvikling – beta åpner snart</span>
+        </div>
+
+        <h1>AI-drevet energivurdering av boligen din.</h1>
+        <p class="lead">
+          Varme Hus analyserer boligen din og gir deg <strong>konkrete, målrettede tiltak</strong> som vil redusere
+          energiforbruk og kostnader – uten at du må være ekspert selv.
+        </p>
+
+        <div class="ctaRow">
+          
+          
+        </div>
+
+        <div class="smallNote">
+          Vi bygger løsningen med fokus på personvern, forståelige anbefalinger og et solid faglig grunnlag.
+        </div>
+      </div>
+
+      <aside class="card heroSide" aria-label="Hurtigoversikt">
+        <div class="kpis">
+          <div class="kpi">
+            <div class="v">Energifokus</div>
+            <div class="l">Tiltak som gir mest effekt først – tydelige prioriteringer.</div>
+          </div>
+          <div class="kpi">
+            <div class="v">AI + metode</div>
+            <div class="l">Data, mønstre og kvalitetssikring i én flyt.</div>
+          </div>
+          <div class="kpi">
+            <div class="v">Praktisk</div>
+            <div class="l">Konkrete anbefalinger vi gjennomfører for deg.</div>
+          </div>
+          <div class="kpi">
+            <div class="v">Forståelig</div>
+            <div class="l">Komplekse vurderinger blir presentert som klare, konkrete og forståelige anbefalinger.</div>
+          </div>
+        </div>
+
+        <!-- Interest form -->
+        <div class="form" id="kontakt">
+  <label for="email">Få beskjed når vi åpner</label>
+
+  <form
+    action="https://formspree.io/f/xwvnbpob"
+    method="POST"
+    id="interestForm"
+  >
+    <div class="fieldRow">
+
+      <input
+        id="email"
+        name="email"
+        type="email"
+        placeholder="Din e-postadresse"
+        required
+      />
+
+      <button class="btn btnPrimary" type="submit">
+        Meld meg på
+      </button>
 
     </div>
 
-</body>
+    <!-- optional hidden fields -->
+    <input type="hidden" name="_subject" value="Ny interesse – Varme Hus beta">
+    <input type="hidden" name="_next" value="https://varmehus.no/takk.html">
 
+    <div class="hint">
+      Ingen spam. Kun beskjed når beta åpner.<br>
+      Eller kontakt oss direkte:
+      <a href="mailto:jon@varmehus.no">jon@varmehus.no</a>
+    </div>
+
+  </form>
+
+  <!-- success message -->
+  <div id="successMessage" style="display:none; margin-top:12px; font-weight:700;">
+    ✓ Takk! Du er nå registrert.
+  </div>
+
+</div>
+
+      </aside>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="card section" id="hvordan">
+      <h2>Hvordan det fungerer</h2>
+      <div class="grid3">
+        <div class="feature">
+          <div class="icon" aria-hidden="true">🔍</div>
+          <p class="t">1) Vi kartlegger</p>
+          <p class="d">
+            Vi samler relevant grunnlag og informasjon om din bolig.
+          </p>
+        </div>
+        <div class="feature">
+          <div class="icon" aria-hidden="true">📊</div>
+          <p class="t">2) Vi vurderer</p>
+          <p class="d">
+            AI-en identifiserer hva som sannsynligvis gir best effekt, og vi presenterer tiltakene på en enkel måte.
+          </p>
+        </div>
+        <div class="feature">
+          <div class="icon" aria-hidden="true">💡</div>
+          <p class="t">3) Du får tiltak</p>
+          <p class="d">
+            Du får konkrete tiltak og jobben utført på en enkel og kostnadseffektiv måte. Vi bidrar også med Enova søknad for dine oppussingsprosjekter!
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHY TRUST -->
+    <section class="card section" id="om">
+      <h2>Hvorfor Varme Hus</h2>
+      <div class="twoCol">
+        <div class="panel">
+          <strong>Bygget for ekte hjem</strong>
+          <p>
+            Vi fokuserer på tiltak som er relevante i praksis: isolasjon, ventilasjon, varmepumpe, generell oppvarming – og helheten.
+            
+          </p>
+        </div>
+        <div class="panel">
+          <strong>Studentbedrift – med ambisjon</strong>
+          <p>
+            Varme Hus er en studentbedrift som utvikler en ny måte å gjøre energivurdering mer tilgjengelig.
+            Vi bygger trinnvis, kvalitetssikrer underveis og åpner for tidlige brukere så snart beta er klar.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATUS -->
+    <section class="card section" aria-label="Status">
+      <h2>Status</h2>
+      <div class="twoCol">
+        <div class="panel">
+          <strong>Lanseres snart</strong>
+          <p>
+            Denne siden er en midlertidig forside mens vi ferdigstiller plattformen. Meld interesse for å få tidlig tilgang.
+          </p>
+        </div>
+        <div class="panel">
+          <strong>Kontakt</strong>
+          <p id="kontaktinfo">
+            Daglig leder Jon Leulfsrud: <a href="mailto:jon@varmehus.no">jon@varmehus.no</a><br/>
+            Back-end ansvarlig Hans Josef Borlaug: <a href="mailto:hans-josef@varmehus.no">hans-josef@varmehus.no</a><br>
+            Front-end ansvarlig Frode Vindheim: <a href="mailto:frode@varmehus.no">frode@varmehus.no</a><br/>
+            
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div>
+      <strong style="color:var(--text)">Varme Hus</strong><br/>
+      <span>Studentbedrift • AI for energieffektive boliger</span>
+    </div>
+    <div class="footLinks">
+      <a class="chip" href="#hvordan">Hvordan det fungerer</a>
+      <a class="chip" href="#om">Om oss</a>
+      <a class="chip" href="mailto:kontakt@varmehus.no">Kontakt</a>
+    </div>
+  </footer>
+
+  <script>
+    // Simple "no-backend" signup: opens mail client with prefilled message.
+    // Replace later with real endpoint (Formspree / own API) when ready.
+    (function(){
+      const form = document.getElementById('interestForm');
+      const email = document.getElementById('email');
+
+      form.addEventListener('submit', function(e){
+        e.preventDefault();
+        const v = (email.value || '').trim();
+        if(!v) return;
+
+        const subject = encodeURIComponent('Varme Hus – interesse for beta');
+        const body =
+          encodeURIComponent(
+            'Hei!\n\nJeg ønsker å få beskjed når Varme Hus åpner beta.\n\nE-post: ' + v + '\n\nMvh'
+          );
+
+        window.location.href = 'mailto:kontakt@varmehus.no?subject=' + subject + '&body=' + body;
+      });
+    })();
+  </script>
+  <script>
+const form = document.getElementById("interestForm");
+const success = document.getElementById("successMessage");
+
+form.addEventListener("submit", async function(e) {
+
+  e.preventDefault();
+
+  const data = new FormData(form);
+
+  const response = await fetch(form.action, {
+    method: form.method,
+    body: data,
+    headers: {
+      'Accept': 'application/json'
+    }
+  });
+
+  if (response.ok) {
+
+    form.style.display = "none";
+    success.style.display = "block";
+
+  } else {
+
+    alert("Noe gikk galt. Prøv igjen.");
+
+  }
+
+});
+</script>
+
+</body>
 </html>
